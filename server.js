@@ -2,7 +2,10 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-
+} catch (e) {
+    console.error(e.message);
+    json(res, 500, { error: e.message });
+  }
 const KEY = process.env.ANTHROPIC_API_KEY;
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const SECRET = process.env.SESSION_SECRET;
