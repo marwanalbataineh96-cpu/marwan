@@ -84,7 +84,7 @@ http.createServer(async (req, res) => {
       saveUser(user);
       return json(res, 200, { user: { name: user.name, picture: user.picture } },
         { "Set-Cookie": cookie(req, makeSession(user), 7 * 86400) });
-   "claude-3-5-sonnet-latest
+   "claude-sonnet-4-6"
 
     if (req.method === "POST" && req.url === "/api/logout") {
       return json(res, 200, { ok: true }, { "Set-Cookie": cookie(req, "", 0) });
