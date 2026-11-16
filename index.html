@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مروان | المساعد التعليمي</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f7f8fc;color:#222;font-family:Arial}
+header{height:75px;background:white;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 6%}
+.logo{font-size:25px;font-weight:bold;color:#315be8}
+.hright{display:flex;align-items:center;gap:10px}
+header button{padding:10px 18px;background:white;color:#315be8;border:1px solid #315be8;border-radius:9px;cursor:pointer}
+#user{display:none;align-items:center;gap:8px;font-size:14px}
+#user img{width:34px;height:34px;border-radius:50%}
+main{max-width:850px;margin:65px auto;padding:20px;text-align:center}
+h1{font-size:38px}
+h1 span{color:#315be8}
+.subtitle{color:#777;line-height:2}
+.chat{background:white;margin-top:35px;padding:15px;border-radius:18px;box-shadow:0 5px 25px #0000000b}
+textarea{width:100%;height:120px;border:0;outline:none;resize:vertical;font-size:17px;padding:15px;font-family:Arial}
+.send{background:#315be8;color:white;border:0;padding:13px 35px;border-radius:10px;font-size:16px;cursor:pointer}
+.send:disabled{opacity:.6}
+#answer{background:white;padding:20px;margin-top:20px;border-radius:14px;text-align:right;line-height:2;white-space:pre-wrap}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:30px}
+.feature{background:white;padding:25px 10px;border-radius:14px}
+#login{background:white;margin-top:35px;padding:35px 15px;border-radius:18px;box-shadow:0 5px 25px #0000000b}
+#gbtn{display:flex;justify-content:center;margin-top:20px}
+#app{display:none}
+footer{text-align:center;color:#888;padding:30px}
+@media(max-width:600px){.features{grid-template-columns:1fr}h1{font-size:29px}}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">مروان 🎓</div>
+<div class="hright">
+<div id="user"><img id="uimg" alt=""><span id="uname"></span><button onclick="logout()" id="logoutBtn">تسجيل الخروج</button></div>
+<button onclick="changeLanguage()" id="lang">English</button>
+</div>
+</header>
+
+<main>
+<h1 id="title">مرحبًا بك في <span>مروان</span></h1>
+<p class="subtitle" id="subtitle">مساعدك التعليمي الذكي. اسأل عن أي مادة دراسية!</p>
+
+<div id="login">
+<div id="loginText">سجّل دخولك بحساب Google لتبدأ</div>
+<div id="gbtn"></div>
+</div>
+
+<div id="app">
+<div class="chat">
+<textarea id="question" placeholder="اكتب سؤالك الدراسي هنا..."></textarea>
+<br><br>
+<button class="send" onclick="ask()" id="send">إرسال السؤال</button>
+</div>
+<div id="answer">ستظهر إجابتك هنا...</div>
+</div>
+
+<div class="features">
+<div class="feature" id="f1">📚 شرح الدروس</div>
+<div class="feature" id="f2">✍️ حل الأسئلة</div>
+<div class="feature" id="f3">📝 امتحانات تدريبية</div>
+</div>
+</main>
+
+<footer>© 2026 موقع مروان التعليمي</footer>
+
+<script>
+let english=false, history=[], me=null, clientId=null;
+const $=id=>document.getElementById(id);
+
+function changeLanguage(){
+english=!english;
+document.documentElement.lang=english?"en":"ar";
+document.documentElement.dir=english?"ltr":"rtl";
+$("lang").innerText=english?"العربية":"English";
+$("title").innerHTML=english?"Welcome to <span>Marwan</span>":"مرحبًا بك في <span>مروان</span>";
+$("subtitle").innerText=english?"Your smart educational assistant. Ask about any school subject!":"مساعدك التعليمي الذكي. اسأل عن أي مادة دراسية!";
+$("question").placeholder=english?"Write your question here...":"اكتب سؤالك الدراسي هنا...";
+$("send").innerText=english?"Send question":"إرسال السؤال";
+$("answer").innerText=english?"Your answer will appear here...":"ستظهر إجابتك هنا...";
+$("loginText").innerText=english?"Sign in with Google to start":"سجّل دخولك بحساب Google لتبدأ";
+$("logoutBtn").innerText=english?"Sign out":"تسجيل الخروج";
+$("f1").innerText=english?"📚 Lesson explanations":"📚 شرح الدروس";
+$("f2").innerText=english?"✍️ Question solving":"✍️ حل الأسئلة";
+$("f3").innerText=english?"📝 Practice exams":"📝 امتحانات تدريبية";
+}
+
+function showState(){
+$("login").style.display=me?"none":"block";
+$("app").style.display=me?"block":"none";
+$("user").style.display=me?"flex":"none";
+if(me){$("uname").innerText=me.name;$("uimg").src=me.picture||"";}
+}
+
+async function init(){
+const r=await fetch("/api/me");
+const d=await r.json();
+me=d.user; clientId=d.clientId;
+showState();
+if(!me) waitForGoogle();
+}
+
+function waitForGoogle(){
+if(!window.google||!google.accounts){return setTimeout(waitForGoogle,200);}
+google.accounts.id.initialize({client_id:clientId,callback:onCredential});
+google.accounts.id.renderButton($("gbtn"),{theme:"outline",size:"large",width:260});
+}
+
+async function onCredential(resp){
+const r=await fetch("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:resp.credential})});
+const d=await r.json();
+if(r.ok){me=d.user;showState();}
+else{alert(english?"Sign-in failed. Try again.":"فشل تسجيل الدخول، حاول مرة ثانية.");}
+}
+
+async function logout(){
+await fetch("/api/logout",{method:"POST"});
+me=null;history=[];showState();waitForGoogle();
+}
+
+async function ask(){
+const q=$("question").value.trim();
+const a=$("answer"),btn=$("send");
+if(!q){a.innerText=english?"Please write a question first.":"اكتب سؤالك أولًا.";return;}
+btn.disabled=true;
+a.innerText=english?"Thinking...":"جارٍ التفكير...";
+try{
+const res=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,history:history})});
+const data=await res.json();
+if(res.status===401){me=null;showState();waitForGoogle();throw new Error("auth");}
+if(!res.ok) throw new Error(data.error||"error");
+a.innerText=data.answer;
+history.push({role:"user",content:q},{role:"assistant",content:data.answer});
+history=history.slice(-10);
+$("question").value="";
+}catch(e){
+a.innerText=e.message==="auth"?(english?"Please sign in again.":"سجّل دخولك مرة ثانية."):(english?"Something went wrong. Please try again.":"صار خطأ، حاول مرة ثانية.");
+}
+btn.disabled=false;
+}
+
+$("question").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey))ask();});
+init();
+</script>
+</body>
+</html>
