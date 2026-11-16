@@ -2,10 +2,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-} catch (e) {
-    console.error(e.message);
-    json(res, 500, { error: e.message });
-  }
+
 const KEY = process.env.ANTHROPIC_API_KEY;
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const SECRET = process.env.SESSION_SECRET;
@@ -87,7 +84,7 @@ http.createServer(async (req, res) => {
       saveUser(user);
       return json(res, 200, { user: { name: user.name, picture: user.picture } },
         { "Set-Cookie": cookie(req, makeSession(user), 7 * 86400) });
-   "claude-sonnet-4-6"
+    }
 
     if (req.method === "POST" && req.url === "/api/logout") {
       return json(res, 200, { ok: true }, { "Set-Cookie": cookie(req, "", 0) });
@@ -103,7 +100,7 @@ http.createServer(async (req, res) => {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-api-key": KEY, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-sonnet-5-5", max_tokens: 1500, system: SYSTEM, messages })
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1500, system: SYSTEM, messages })
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error?.message || "API error");
@@ -113,6 +110,6 @@ http.createServer(async (req, res) => {
     res.writeHead(404); res.end();
   } catch (e) {
     console.error(e.message);
-    json(res, 500, { error: "server error" });
+    json(res, 500, { error: e.message });
   }
 }).listen(PORT, () => console.log("Marwan running on port " + PORT));
